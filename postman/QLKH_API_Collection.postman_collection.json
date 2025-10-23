@@ -1,0 +1,937 @@
+{
+  "info": {
+    "name": "QLKH API Collection",
+    "description": "Collection để test API Quản lý kho hàng",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "API Documentation",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/docs",
+          "host": ["{{baseUrl}}"],
+          "path": ["docs"]
+        }
+      }
+    },
+    {
+      "name": "Nhà Cung Cấp",
+      "item": [
+        {
+          "name": "Get All Nhà Cung Cấp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhacungcap?page=1&limit=10&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhacungcap"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Nhà Cung Cấp By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhacungcap/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhacungcap", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Nhà Cung Cấp",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenNCC\": \"Công ty ABC\",\n  \"DiaChi\": \"123 Đường ABC, Quận 1, TP.HCM\",\n  \"SDT\": \"0123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/nhacungcap",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhacungcap"]
+            }
+          }
+        },
+        {
+          "name": "Update Nhà Cung Cấp",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenNCC\": \"Công ty ABC Updated\",\n  \"DiaChi\": \"456 Đường XYZ, Quận 2, TP.HCM\",\n  \"SDT\": \"0987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/nhacungcap/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhacungcap", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Nhà Cung Cấp",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhacungcap/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhacungcap", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Khu Vực",
+      "item": [
+        {
+          "name": "Get All Khu Vực",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khuvuc?page=1&limit=10&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["khuvuc"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Khu Vực By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khuvuc/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khuvuc", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Khu Vực",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenKhuVuc\": \"Khu vực A\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/khuvuc",
+              "host": ["{{baseUrl}}"],
+              "path": ["khuvuc"]
+            }
+          }
+        },
+        {
+          "name": "Update Khu Vực",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenKhuVuc\": \"Khu vực A Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/khuvuc/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khuvuc", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Khu Vực",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khuvuc/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khuvuc", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kho Hàng",
+      "item": [
+        {
+          "name": "Get All Kho Hàng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khohang?page=1&limit=10&search=&MaKhuVuc=",
+              "host": ["{{baseUrl}}"],
+              "path": ["khohang"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""},
+                {"key": "MaKhuVuc", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Kho Hàng By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khohang/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khohang", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Kho Hàng",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenKho\": \"Kho A\",\n  \"DiaDiem\": \"123 Đường Kho, Quận 1\",\n  \"MaKhuVuc\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/khohang",
+              "host": ["{{baseUrl}}"],
+              "path": ["khohang"]
+            }
+          }
+        },
+        {
+          "name": "Update Kho Hàng",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenKho\": \"Kho A Updated\",\n  \"DiaDiem\": \"456 Đường Kho Mới, Quận 2\",\n  \"MaKhuVuc\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/khohang/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khohang", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Kho Hàng",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/khohang/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["khohang", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sản Phẩm",
+      "item": [
+        {
+          "name": "Get All Sản Phẩm",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sanpham?page=1&limit=10&search=&MaNCC=",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanpham"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""},
+                {"key": "MaNCC", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Sản Phẩm By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sanpham/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanpham", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Sản Phẩm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenSP\": \"Sản phẩm A\",\n  \"DonVi\": \"Cái\",\n  \"MaNCC\": 1,\n  \"MoTa\": \"Mô tả sản phẩm A\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sanpham",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanpham"]
+            }
+          }
+        },
+        {
+          "name": "Update Sản Phẩm",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenSP\": \"Sản phẩm A Updated\",\n  \"DonVi\": \"Thùng\",\n  \"MaNCC\": 1,\n  \"MoTa\": \"Mô tả sản phẩm A đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sanpham/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanpham", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Sản Phẩm",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sanpham/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["sanpham", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nhập Kho",
+      "item": [
+        {
+          "name": "Get All Nhập Kho",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhapkho?page=1&limit=10&search=&MaKho=&MaNCC=&fromDate=&toDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhapkho"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""},
+                {"key": "MaKho", "value": ""},
+                {"key": "MaNCC", "value": ""},
+                {"key": "fromDate", "value": ""},
+                {"key": "toDate", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Nhập Kho By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhapkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhapkho", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Nhập Kho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaKho\": 1,\n  \"MaNCC\": 1,\n  \"NgayNhap\": \"2024-01-15\",\n  \"GhiChu\": \"Nhập hàng tháng 1\",\n  \"chiTietNhap\": [\n    {\n      \"MaSP\": 1,\n      \"SoLuong\": 100,\n      \"GiaNhap\": 50000,\n      \"Note\": \"Hàng mới\"\n    },\n    {\n      \"MaSP\": 2,\n      \"SoLuong\": 50,\n      \"GiaNhap\": 75000,\n      \"Note\": \"Hàng chất lượng cao\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/nhapkho",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhapkho"]
+            }
+          }
+        },
+        {
+          "name": "Update Nhập Kho",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"NgayNhap\": \"2024-01-16\",\n  \"GhiChu\": \"Nhập hàng tháng 1 - Đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/nhapkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhapkho", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Nhập Kho",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nhapkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["nhapkho", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chi Tiết Nhập",
+      "item": [
+        {
+          "name": "Get All Chi Tiết Nhập",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietnhap?MaNhap=&MaSP=",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietnhap"],
+              "query": [
+                {"key": "MaNhap", "value": ""},
+                {"key": "MaSP", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Chi Tiết Nhập By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietnhap/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietnhap", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Chi Tiết Nhập",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaNhap\": 1,\n  \"MaSP\": 1,\n  \"SoLuong\": 25,\n  \"GiaNhap\": 55000,\n  \"Note\": \"Bổ sung thêm hàng\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chitietnhap",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietnhap"]
+            }
+          }
+        },
+        {
+          "name": "Update Chi Tiết Nhập",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"SoLuong\": 30,\n  \"GiaNhap\": 60000,\n  \"Note\": \"Đã cập nhật giá và số lượng\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chitietnhap/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietnhap", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Chi Tiết Nhập",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietnhap/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietnhap", "1", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Xuất Kho",
+      "item": [
+        {
+          "name": "Get All Xuất Kho",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/xuatkho?page=1&limit=10&search=&MaKho=&fromDate=&toDate=",
+              "host": ["{{baseUrl}}"],
+              "path": ["xuatkho"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""},
+                {"key": "MaKho", "value": ""},
+                {"key": "fromDate", "value": ""},
+                {"key": "toDate", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Xuất Kho By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/xuatkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["xuatkho", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Xuất Kho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaKho\": 1,\n  \"NgayXuat\": \"2024-01-20\",\n  \"GhiChu\": \"Xuất hàng cho khách hàng\",\n  \"chiTietXuat\": [\n    {\n      \"MaSP\": 1,\n      \"SoLuong\": 20,\n      \"GiaXuat\": 60000,\n      \"Note\": \"Xuất cho khách VIP\"\n    },\n    {\n      \"MaSP\": 2,\n      \"SoLuong\": 10,\n      \"GiaXuat\": 80000,\n      \"Note\": \"Xuất hàng chất lượng cao\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xuatkho",
+              "host": ["{{baseUrl}}"],
+              "path": ["xuatkho"]
+            }
+          }
+        },
+        {
+          "name": "Update Xuất Kho",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"NgayXuat\": \"2024-01-21\",\n  \"GhiChu\": \"Xuất hàng cho khách hàng - Đã cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/xuatkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["xuatkho", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Xuất Kho",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/xuatkho/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["xuatkho", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chi Tiết Xuất",
+      "item": [
+        {
+          "name": "Get All Chi Tiết Xuất",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietxuat?MaXuat=&MaSP=",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietxuat"],
+              "query": [
+                {"key": "MaXuat", "value": ""},
+                {"key": "MaSP", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Chi Tiết Xuất By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietxuat/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietxuat", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Chi Tiết Xuất",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"MaXuat\": 1,\n  \"MaSP\": 1,\n  \"SoLuong\": 5,\n  \"GiaXuat\": 65000,\n  \"Note\": \"Bổ sung xuất thêm\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chitietxuat",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietxuat"]
+            }
+          }
+        },
+        {
+          "name": "Update Chi Tiết Xuất",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"SoLuong\": 8,\n  \"GiaXuat\": 70000,\n  \"Note\": \"Đã cập nhật số lượng và giá\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chitietxuat/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietxuat", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Chi Tiết Xuất",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/chitietxuat/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["chitietxuat", "1", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doanh Thu",
+      "item": [
+        {
+          "name": "Get Doanh Thu Theo Thời Gian",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doanhthu/thoigian?fromDate=2024-01-01&toDate=2024-01-31&maKho=&maKhuVuc=&groupBy=day&page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["doanhthu", "thoigian"],
+              "query": [
+                {"key": "fromDate", "value": "2024-01-01"},
+                {"key": "toDate", "value": "2024-01-31"},
+                {"key": "maKho", "value": ""},
+                {"key": "maKhuVuc", "value": ""},
+                {"key": "groupBy", "value": "day"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "50"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Doanh Thu Theo Sản Phẩm",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doanhthu/sanpham?fromDate=2024-01-01&toDate=2024-01-31&maKho=&maKhuVuc=&maSP=&page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["doanhthu", "sanpham"],
+              "query": [
+                {"key": "fromDate", "value": "2024-01-01"},
+                {"key": "toDate", "value": "2024-01-31"},
+                {"key": "maKho", "value": ""},
+                {"key": "maKhuVuc", "value": ""},
+                {"key": "maSP", "value": ""},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "50"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Doanh Thu Theo Kho",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doanhthu/kho?fromDate=2024-01-01&toDate=2024-01-31&maKhuVuc=&page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["doanhthu", "kho"],
+              "query": [
+                {"key": "fromDate", "value": "2024-01-01"},
+                {"key": "toDate", "value": "2024-01-31"},
+                {"key": "maKhuVuc", "value": ""},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "50"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Báo Cáo Doanh Thu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doanhthu/baocao?fromDate=2024-01-01&toDate=2024-01-31&maKhuVuc=&reportType=comprehensive",
+              "host": ["{{baseUrl}}"],
+              "path": ["doanhthu", "baocao"],
+              "query": [
+                {"key": "fromDate", "value": "2024-01-01"},
+                {"key": "toDate", "value": "2024-01-31"},
+                {"key": "maKhuVuc", "value": ""},
+                {"key": "reportType", "value": "comprehensive"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Doanh Thu Real-time",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doanhthu/realtime?maKhuVuc=&maKho=",
+              "host": ["{{baseUrl}}"],
+              "path": ["doanhthu", "realtime"],
+              "query": [
+                {"key": "maKhuVuc", "value": ""},
+                {"key": "maKho", "value": ""}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tồn Kho",
+      "item": [
+        {
+          "name": "Get All Tồn Kho",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tonkho?page=1&limit=10&search=&MaKho=&MaSP=&minQuantity=&maxQuantity=",
+              "host": ["{{baseUrl}}"],
+              "path": ["tonkho"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "search", "value": ""},
+                {"key": "MaKho", "value": ""},
+                {"key": "MaSP", "value": ""},
+                {"key": "minQuantity", "value": ""},
+                {"key": "maxQuantity", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tồn Kho Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tonkho/summary?MaKho=",
+              "host": ["{{baseUrl}}"],
+              "path": ["tonkho", "summary"],
+              "query": [
+                {"key": "MaKho", "value": ""}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tồn Kho By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tonkho/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tonkho", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Tồn Kho",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"SoLuongTon\": 150\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tonkho/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tonkho", "1", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tồn Kho",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tonkho/1/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tonkho", "1", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

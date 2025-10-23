@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QLKH Real-time Dashboard</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .metric-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .alert.warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .alert.danger {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .alert.info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .controls {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .controls button:hover {
+            background: #5a6fd8;
+        }
+        .controls select, .controls input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #28a745;
+        }
+        .status.disconnected {
+            background: #dc3545;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+        }
+        .log-entry.error {
+            color: #ff6b6b;
+            border-left-color: #ff6b6b;
+        }
+        .log-entry.warning {
+            color: #ffd93d;
+            border-left-color: #ffd93d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 QLKH Real-time Dashboard</h1>
+            <p>Báo cáo tồn kho thời gian thực</p>
+        </div>
+
+        <div class="status" id="connectionStatus">Disconnected</div>
+
+        <div class="controls">
+            <h3>🎛️ Điều khiển</h3>
+            <select id="khuVucSelect">
+                <option value="">Tất cả khu vực</option>
+                <option value="1">Khu vực 1</option>
+                <option value="2">Khu vực 2</option>
+                <option value="3">Khu vực 3</option>
+                <option value="4">Khu vực 4</option>
+            </select>
+            
+            <select id="khoSelect">
+                <option value="">Tất cả kho</option>
+            </select>
+            
+            <button onclick="joinRoom()">🔗 Kết nối</button>
+            <button onclick="getInventoryReport()">📊 Lấy báo cáo</button>
+            <button onclick="subscribeRealtime()">⚡ Theo dõi real-time</button>
+            <button onclick="clearLog()">🗑️ Xóa log</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>📈 Tổng quan</h3>
+                <div id="summaryMetrics">
+                    <div class="metric">
+                        <span>Tổng sản phẩm:</span>
+                        <span class="metric-value" id="totalProducts">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Tổng số lượng:</span>
+                        <span class="metric-value" id="totalQuantity">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Tồn kho thấp:</span>
+                        <span class="metric-value" id="lowStock">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Hết hàng:</span>
+                        <span class="metric-value" id="outOfStock">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📅 Giao dịch hôm nay</h3>
+                <div id="todayTransactions">
+                    <div class="metric">
+                        <span>Nhập kho:</span>
+                        <span class="metric-value" id="todayNhap">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Xuất kho:</span>
+                        <span class="metric-value" id="todayXuat">-</span>
+                    </div>
+                    <div class="metric">
+                        <span>Thay đổi ròng:</span>
+                        <span class="metric-value" id="netChange">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚠️ Cảnh báo</h3>
+                <div id="alerts">
+                    <p>Chưa có cảnh báo</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Chi tiết tồn kho</h3>
+                <div id="inventoryDetails">
+                    <p>Chưa có dữ liệu</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📝 Log Real-time</h3>
+            <div class="log" id="logContainer">
+                <div class="log-entry">Kết nối Socket.IO...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO connection
+        const socket = io('http://localhost:3000');
+        let currentRoom = null;
+
+        // Connection status
+        socket.on('connect', () => {
+            updateConnectionStatus(true);
+            addLog('✅ Kết nối thành công', 'success');
+        });
+
+        socket.on('disconnect', () => {
+            updateConnectionStatus(false);
+            addLog('❌ Mất kết nối', 'error');
+        });
+
+        // Room events
+        socket.on('joined-room', (data) => {
+            addLog(`🏠 Đã tham gia room: Khu vực ${data.maKhuVuc || 'Tất cả'}, Kho ${data.maKho || 'Tất cả'}`, 'success');
+            currentRoom = data;
+        });
+
+        socket.on('subscribed', (data) => {
+            addLog(`⚡ Đã đăng ký real-time updates`, 'success');
+        });
+
+        // Report events
+        socket.on('inventory-report', (data) => {
+            if (data.success) {
+                addLog(`📊 Nhận báo cáo tồn kho: ${data.reportType}`, 'success');
+                updateDashboard(data.data);
+            } else {
+                addLog(`❌ Lỗi báo cáo: ${data.error}`, 'error');
+            }
+        });
+
+        // Real-time updates
+        socket.on('inventory-update', (data) => {
+            addLog(`🔄 Cập nhật tồn kho: ${data.changeType}`, 'warning');
+            // Refresh dashboard
+            getInventoryReport();
+        });
+
+        socket.on('transaction-update', (data) => {
+            addLog(`💼 Giao dịch mới: ${data.transactionType}`, 'info');
+            // Refresh dashboard
+            getInventoryReport();
+        });
+
+        socket.on('alert', (data) => {
+            addLog(`⚠️ Cảnh báo: ${data.message}`, 'warning');
+            showAlert(data);
+        });
+
+        socket.on('dashboard-update', (data) => {
+            addLog(`📊 Cập nhật dashboard`, 'info');
+            updateDashboard(data);
+        });
+
+        // Functions
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = connected ? 'Connected' : 'Disconnected';
+            status.className = `status ${connected ? 'connected' : 'disconnected'}`;
+        }
+
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function joinRoom() {
+            const maKhuVuc = document.getElementById('khuVucSelect').value;
+            const maKho = document.getElementById('khoSelect').value;
+            
+            socket.emit('join-room', {
+                maKhuVuc: maKhuVuc || null,
+                maKho: maKho || null
+            });
+        }
+
+        function getInventoryReport() {
+            const maKhuVuc = document.getElementById('khuVucSelect').value;
+            const maKho = document.getElementById('khoSelect').value;
+            
+            socket.emit('get-inventory-report', {
+                maKhuVuc: maKhuVuc || null,
+                maKho: maKho || null,
+                reportType: 'summary'
+            });
+        }
+
+        function subscribeRealtime() {
+            const maKhuVuc = document.getElementById('khuVucSelect').value;
+            const maKho = document.getElementById('khoSelect').value;
+            
+            socket.emit('subscribe-realtime', {
+                maKhuVuc: maKhuVuc || null,
+                maKho: maKho || null,
+                updateTypes: ['inventory', 'transactions', 'alerts']
+            });
+        }
+
+        function updateDashboard(data) {
+            if (data.inventory) {
+                document.getElementById('totalProducts').textContent = data.inventory.totalProducts || 0;
+                document.getElementById('totalQuantity').textContent = data.inventory.totalQuantity || 0;
+                document.getElementById('lowStock').textContent = data.inventory.lowStockItems || 0;
+                document.getElementById('outOfStock').textContent = data.inventory.outOfStockItems || 0;
+            }
+
+            if (data.todayTransactions) {
+                document.getElementById('todayNhap').textContent = data.todayTransactions.nhap?.quantity || 0;
+                document.getElementById('todayXuat').textContent = data.todayTransactions.xuat?.quantity || 0;
+                document.getElementById('netChange').textContent = data.todayTransactions.netChange || 0;
+            }
+        }
+
+        function showAlert(alertData) {
+            const alertsContainer = document.getElementById('alerts');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertData.alertType === 'out-of-stock' ? 'danger' : 
+                                   alertData.alertType === 'low-stock' ? 'warning' : 'info'}`;
+            alertDiv.textContent = alertData.message;
+            alertsContainer.appendChild(alertDiv);
+        }
+
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '';
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (currentRoom) {
+                getInventoryReport();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
