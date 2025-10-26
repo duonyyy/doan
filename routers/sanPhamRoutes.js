@@ -5,8 +5,12 @@ const {
   getSanPhamById,
   createSanPham,
   updateSanPham,
-  deleteSanPham
+  deleteSanPham,
+  getTop5SanPhamTonKhoItNhatTheoKho,
 } = require('../controllers/sanPhamController');
+
+// ví dụ: GET /api/tonkho/top5?ShardKey=shard1&MaKho=2&MaKhuVuc=1
+router.get('/top5', getTop5SanPhamTonKhoItNhatTheoKho);
 
 // GET /api/sanpham - Lấy danh sách sản phẩm
 router.get('/', getAllSanPham);

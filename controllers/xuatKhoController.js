@@ -1,16 +1,16 @@
 const { XuatKho, ChiTietXuat, KhoHang, SanPham, TonKho } = require('../models');
 const { Op } = require('sequelize');
-
+const { getDbFromRequest } = require('../config/db.config'); // Giả định đường dẫn này đúng
 // GET /api/xuatkho - Lấy danh sách xuất kho
 const getAllXuatKho = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, MaKho, fromDate, toDate } = req.query;
     const offset = (page - 1) * limit;
-    
+
     let whereClause = {};
     if (search) {
       whereClause = {
-        GhiChu: { [Op.like]: `%${search}%` }
+        GhiChu: { [Op.like]: `%${search}%` },
       };
     }
     if (MaKho) {
@@ -18,7 +18,7 @@ const getAllXuatKho = async (req, res) => {
     }
     if (fromDate && toDate) {
       whereClause.NgayXuat = {
-        [Op.between]: [fromDate, toDate]
+        [Op.between]: [fromDate, toDate],
       };
     }
 
@@ -26,7 +26,10 @@ const getAllXuatKho = async (req, res) => {
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['NgayXuat', 'DESC'], ['MaXuat', 'DESC']],
+      order: [
+        ['NgayXuat', 'DESC'],
+        ['MaXuat', 'DESC'],
+      ],
       include: [
         {
           model: KhoHang,
@@ -34,9 +37,9 @@ const getAllXuatKho = async (req, res) => {
           include: [
             {
               model: require('../models').KhuVuc,
-              as: 'KhuVuc'
-            }
-          ]
+              as: 'KhuVuc',
+            },
+          ],
         },
         {
           model: ChiTietXuat,
@@ -44,11 +47,11 @@ const getAllXuatKho = async (req, res) => {
           include: [
             {
               model: SanPham,
-              as: 'SanPham'
-            }
-          ]
-        }
-      ]
+              as: 'SanPham',
+            },
+          ],
+        },
+      ],
     });
 
     res.json({
@@ -58,14 +61,14 @@ const getAllXuatKho = async (req, res) => {
         total: count,
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
-      }
+        totalPages: Math.ceil(count / limit),
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy danh sách xuất kho',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -82,9 +85,9 @@ const getXuatKhoById = async (req, res) => {
           include: [
             {
               model: require('../models').KhuVuc,
-              as: 'KhuVuc'
-            }
-          ]
+              as: 'KhuVuc',
+            },
+          ],
         },
         {
           model: ChiTietXuat,
@@ -92,140 +95,152 @@ const getXuatKhoById = async (req, res) => {
           include: [
             {
               model: SanPham,
-              as: 'SanPham'
-            }
-          ]
-        }
-      ]
+              as: 'SanPham',
+            },
+          ],
+        },
+      ],
     });
 
     if (!xuatKho) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy phiếu xuất kho'
+        message: 'Không tìm thấy phiếu xuất kho',
       });
     }
 
     res.json({
       success: true,
-      data: xuatKho
+      data: xuatKho,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy thông tin xuất kho',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// POST /api/xuatkho - Tạo phiếu xuất kho mới
+// Giả định bạn có hàm này để định tuyến đến đúng DB (Master hoặc Shard)
+
 const createXuatKho = async (req, res) => {
-  const transaction = await require('../config/db.config').getDbConnection().transaction();
-  
+  // 1. ĐỊNH TUYẾN: Lấy kết nối DB (Master/Shard)
+  // Việc định tuyến này phụ thuộc vào ShardKey hoặc MaKhuVuc có trong req.body
+  const db = await getDbFromRequest(req);
+  if (!db) {
+    return res.status(500).json({
+      success: false,
+      message:
+        'Lỗi cấu hình Shard hoặc thiếu thông tin định tuyến (ShardKey/MaKhuVuc)',
+    });
+  }
+
   try {
     const { MaKho, NgayXuat, GhiChu, chiTietXuat } = req.body;
 
+    // Validation cơ bản
     if (!MaKho || !NgayXuat || !chiTietXuat || chiTietXuat.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Thông tin bắt buộc: kho, ngày xuất và chi tiết xuất'
+        message:
+          'Thông tin phiếu xuất không hợp lệ: Thiếu Kho, Ngày xuất hoặc Chi tiết xuất.',
       });
     }
 
-    // Validate warehouse
-    const khoHang = await KhoHang.findByPk(MaKho);
-    if (!khoHang) {
-      return res.status(400).json({
+    // 2. TẠO CHUỖI SQL GỌI STRORED PROCEDURE (sp_TaoPhieuXuat)
+
+    let sql = `
+            -- Khai báo kiểu bảng và biến OUTPUT
+            -- Lưu ý: Bạn phải đảm bảo kiểu bảng dbo.ChiTietXuat_Type đã được tạo trên DB này!
+            DECLARE @ChiTietXuat AS dbo.ChiTietXuat_Type; 
+            DECLARE @MaXuatMoi INT;
+        `;
+
+    // Điền dữ liệu chi tiết vào bảng tạm @ChiTietXuat
+    for (const item of chiTietXuat) {
+      // Đảm bảo escape các ký tự đặc biệt ('') cho chuỗi NVARCHAR (Note)
+      const note = item.Note ? item.Note.replace(/'/g, "''") : '';
+
+      // Đảm bảo GiaXuat luôn là số
+      const giaXuat = parseFloat(item.GiaXuat) || 0;
+
+      sql += `
+                INSERT INTO @ChiTietXuat (MaSP, SoLuong, GiaXuat, Note)
+                VALUES (${item.MaSP}, ${item.SoLuong}, ${giaXuat}, N'${note}');
+            `;
+    }
+
+    // Đảm bảo escape GhiChu
+    const ghiChu = GhiChu ? GhiChu.replace(/'/g, "''") : '';
+
+    // Gọi Stored Procedure chính
+    // Chú ý: Cú pháp gọi SP phải khớp với định nghĩa T-SQL (@MaKho, @NgayXuat, @GhiChu, @ChiTietXuat, @MaXuat_Output)
+    sql += `
+            EXEC sp_TaoPhieuXuat 
+                @MaKho = ${MaKho}, 
+                @NgayXuat = '${NgayXuat}', 
+                @GhiChu = N'${ghiChu}',
+                @ChiTietXuat = @ChiTietXuat,
+                @MaXuat_Output = @MaXuatMoi OUTPUT;
+            
+            -- Trả về MaXuatMoi
+            SELECT @MaXuatMoi AS MaXuat;
+        `;
+
+    // 3. THỰC THI QUERY (Tất cả logic transaction, kiểm tra tồn kho nằm trong SP)
+    const result = await db.query(sql, {
+      type: db.QueryTypes.SELECT, // Để lấy MaXuat trả về
+    });
+
+    // Lấy MaXuat từ kết quả trả về
+    const MaXuat = result[0]?.MaXuat;
+
+    if (!MaXuat) {
+      // Lỗi này xảy ra khi SP thất bại (thường do lỗi kiểm tra tồn kho, hoặc lỗi SQL khác)
+      return res.status(500).json({
         success: false,
-        message: 'Kho hàng không tồn tại'
+        message:
+          'Thực thi Stored Procedure thất bại hoặc không lấy được ID mới (Kiểm tra Log SQL).',
       });
     }
 
-    // Check inventory availability
-    for (const chiTiet of chiTietXuat) {
-      const { MaSP, SoLuong } = chiTiet;
-      
-      const tonKho = await TonKho.findOne({
-        where: { MaSP, MaKho }
-      });
+    const newXuatKhoData = { MaXuat, MaKho, NgayXuat, GhiChu };
 
-      if (!tonKho || tonKho.SoLuongTon < SoLuong) {
-        const sanPham = await SanPham.findByPk(MaSP);
-        return res.status(400).json({
-          success: false,
-          message: `Không đủ tồn kho cho sản phẩm ${sanPham?.TenSP || MaSP}. Tồn kho hiện tại: ${tonKho?.SoLuongTon || 0}`
-        });
-      }
-    }
-
-    // Create export record
-    const xuatKho = await XuatKho.create({
-      MaKho,
-      NgayXuat,
-      GhiChu
-    }, { transaction });
-
-    // Create export details and update inventory
-    for (const chiTiet of chiTietXuat) {
-      const { MaSP, SoLuong, GiaXuat, Note } = chiTiet;
-
-      // Validate product
-      const sanPham = await SanPham.findByPk(MaSP);
-      if (!sanPham) {
-        throw new Error(`Sản phẩm với mã ${MaSP} không tồn tại`);
-      }
-
-      // Create export detail
-      await ChiTietXuat.create({
-        MaXuat: xuatKho.MaXuat,
-        MaSP,
-        SoLuong,
-        GiaXuat,
-        Note
-      }, { transaction });
-
-      // Update inventory
-      const tonKho = await TonKho.findOne({
-        where: { MaSP, MaKho }
-      });
-
-      await tonKho.update({
-        SoLuongTon: tonKho.SoLuongTon - SoLuong
-      }, { transaction });
-    }
-
-    await transaction.commit();
-
-    // Broadcast real-time update
-    if (global.socketServer) {
-      global.socketServer.broadcastInventoryUpdate(
-        khoHang.MaKhuVuc,
-        MaKho,
-        'xuat-kho',
-        {
-          maXuat: xuatKho.MaXuat,
-          ngayXuat: NgayXuat,
-          chiTiet: chiTietXuat
-        }
-      );
-    }
+    // 4. Nếu cần, thực hiện Broadcast
+    // (Giả định bạn đã có khoHang và MaKhuVuc để broadcast)
+    // if (global.socketServer) {
+    //     const khoHang = await db.models.KhoHang.findByPk(MaKho); // Cần truy vấn lại nếu muốn có MaKhuVuc
+    //     global.socketServer.broadcastInventoryUpdate(
+    //         khoHang.MaKhuVuc, // Cần đảm bảo có
+    //         MaKho,
+    //         'xuat-kho',
+    //         { maXuat: MaXuat, ngayXuat: NgayXuat, chiTiet: chiTietXuat }
+    //     );
+    // }
 
     res.status(201).json({
       success: true,
       message: 'Tạo phiếu xuất kho thành công',
-      data: { MaXuat: xuatKho.MaXuat }
+      data: newXuatKhoData,
     });
   } catch (error) {
-    await transaction.rollback();
-    res.status(500).json({
+    console.error('Lỗi createXuatKho (SP):', error);
+
+    // Lấy thông báo lỗi SQL từ lỗi trả về (đặc biệt là lỗi RAISERROR về Tồn Kho)
+    const sqlErrorMessage = error.original?.message || error.message;
+
+    // Xử lý thông báo lỗi Tồn Kho cụ thể từ RAISERROR trong SP
+    const isStockError = sqlErrorMessage.includes('Kho không đủ tồn kho');
+    const statusCode = isStockError ? 400 : 500;
+
+    res.status(statusCode).json({
       success: false,
-      message: 'Lỗi khi tạo phiếu xuất kho',
-      error: error.message
+      message: 'Lỗi khi tạo phiếu xuất kho. Chi tiết: ' + sqlErrorMessage,
+      error: error.message,
     });
   }
 };
-
 // PUT /api/xuatkho/:id - Cập nhật phiếu xuất kho
 const updateXuatKho = async (req, res) => {
   try {
@@ -236,33 +251,35 @@ const updateXuatKho = async (req, res) => {
     if (!xuatKho) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy phiếu xuất kho'
+        message: 'Không tìm thấy phiếu xuất kho',
       });
     }
 
     await xuatKho.update({
       NgayXuat: NgayXuat || xuatKho.NgayXuat,
-      GhiChu: GhiChu !== undefined ? GhiChu : xuatKho.GhiChu
+      GhiChu: GhiChu !== undefined ? GhiChu : xuatKho.GhiChu,
     });
 
     res.json({
       success: true,
       message: 'Cập nhật phiếu xuất kho thành công',
-      data: xuatKho
+      data: xuatKho,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Lỗi khi cập nhật phiếu xuất kho',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 // DELETE /api/xuatkho/:id - Xóa phiếu xuất kho
 const deleteXuatKho = async (req, res) => {
-  const transaction = await require('../config/db.config').getDbConnection().transaction();
-  
+  const transaction = await require('../config/db.config')
+    .getDbConnection()
+    .transaction();
+
   try {
     const { id } = req.params;
 
@@ -270,35 +287,38 @@ const deleteXuatKho = async (req, res) => {
       include: [
         {
           model: ChiTietXuat,
-          as: 'ChiTietXuats'
-        }
-      ]
+          as: 'ChiTietXuats',
+        },
+      ],
     });
 
     if (!xuatKho) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy phiếu xuất kho'
+        message: 'Không tìm thấy phiếu xuất kho',
       });
     }
 
     // Reverse inventory changes
     for (const chiTiet of xuatKho.ChiTietXuats) {
       const tonKho = await TonKho.findOne({
-        where: { MaSP: chiTiet.MaSP, MaKho: xuatKho.MaKho }
+        where: { MaSP: chiTiet.MaSP, MaKho: xuatKho.MaKho },
       });
 
       if (tonKho) {
-        await tonKho.update({
-          SoLuongTon: tonKho.SoLuongTon + chiTiet.SoLuong
-        }, { transaction });
+        await tonKho.update(
+          {
+            SoLuongTon: tonKho.SoLuongTon + chiTiet.SoLuong,
+          },
+          { transaction }
+        );
       }
     }
 
     // Delete export details
     await ChiTietXuat.destroy({
       where: { MaXuat: id },
-      transaction
+      transaction,
     });
 
     // Delete export record
@@ -308,14 +328,14 @@ const deleteXuatKho = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Xóa phiếu xuất kho thành công'
+      message: 'Xóa phiếu xuất kho thành công',
     });
   } catch (error) {
     await transaction.rollback();
     res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa phiếu xuất kho',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -325,5 +345,5 @@ module.exports = {
   getXuatKhoById,
   createXuatKho,
   updateXuatKho,
-  deleteXuatKho
+  deleteXuatKho,
 };

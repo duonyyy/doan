@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const http = require('http');
-const { testConnections } = require('./config/db.config');
 const { errorHandler, notFoundHandler, requestLogger } = require('./middlewares/errorHandler');
 
 // Import routes
@@ -42,8 +41,9 @@ const realtimeReports = new RealtimeReports(socketServer);
 // Make socketServer available globally for controllers
 global.socketServer = socketServer;
 
-// Test database connections
-testConnections();
+// Skip database connection test for demo
+console.log('🔍 Skipping database connection test (demo mode)');
+console.log('✅ Server running in demo mode - authentication uses fake data');
 
 // Start server
 server.listen(PORT, () => {
@@ -51,4 +51,5 @@ server.listen(PORT, () => {
   console.log(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
   console.log(`🔌 Socket.IO ready for real-time connections`);
   console.log(`📊 Real-time inventory reports enabled`);
+  console.log(`🎯 Demo mode: Using fake data for authentication`);
 });

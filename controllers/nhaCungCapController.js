@@ -1,26 +1,38 @@
-const { NhaCungCap } = require('../models');
-const { getDbConnection } = require('../config/db.config');
+// CHỈ import hàm getDbFromRequest và Op
+const { getDbFromRequest } = require('../config/db.config');
 const { Op } = require('sequelize');
 
-// Lấy tất cả nhà cung cấp
+// BỎ HOÀN TOÀN: const { NhaCungCap } = require('../models');
+
+// Lấy tất cả nhà cung cấp (ĐÃ SỬA CHO SHARDING)
 const getAllNhaCungCap = async (req, res) => {
   try {
+    // 1. Lấy DB từ request
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    // 2. Lấy Model từ DB đó
+    const NhaCungCap = db.models.NhaCungCap;
+
+    // 3. Logic giữ nguyên
     const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (page - 1) * limit;
 
-    const whereClause = search ? {
-      [Op.or]: [
-        { TenNCC: { [Op.like]: `%${search}%` } },
-        { DiaChi: { [Op.like]: `%${search}%` } },
-        { SDT: { [Op.like]: `%${search}%` } }
-      ]
-    } : {};
+    const whereClause = search
+      ? {
+          [Op.or]: [
+            { TenNCC: { [Op.like]: `%${search}%` } },
+            { DiaChi: { [Op.like]: `%${search}%` } },
+            { SDT: { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
 
     const { count, rows } = await NhaCungCap.findAndCountAll({
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['MaNCC', 'ASC']]
+      order: [['MaNCC', 'ASC']],
     });
 
     res.json({
@@ -30,95 +42,112 @@ const getAllNhaCungCap = async (req, res) => {
         total: count,
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
-      }
+        totalPages: Math.ceil(count / limit),
+      },
     });
   } catch (error) {
-    console.error('Error getting all NhaCungCap:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy danh sách nhà cung cấp',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// Lấy nhà cung cấp theo ID
+// Lấy nhà cung cấp theo ID (ĐÃ SỬA CHO SHARDING)
 const getNhaCungCapById = async (req, res) => {
   try {
+    // 1. Lấy DB
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    // 2. Lấy Model
+    const NhaCungCap = db.models.NhaCungCap;
+
+    // 3. Logic
     const { id } = req.params;
     const nhaCungCap = await NhaCungCap.findByPk(id);
 
     if (!nhaCungCap) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhà cung cấp'
+        message: 'Không tìm thấy nhà cung cấp',
       });
     }
 
     res.json({
       success: true,
-      data: nhaCungCap
+      data: nhaCungCap,
     });
   } catch (error) {
-    console.error('Error getting NhaCungCap by ID:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi khi lấy thông tin nhà cung cấp',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// Tạo nhà cung cấp mới
+// Tạo nhà cung cấp mới (ĐÃ SỬA CHO SHARDING)
 const createNhaCungCap = async (req, res) => {
   try {
+    // 1. Lấy DB
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    // 2. Lấy Model
+    const NhaCungCap = db.models.NhaCungCap;
+
+    // 3. Logic
     const { TenNCC, DiaChi, SDT } = req.body;
 
-    // Validation
     if (!TenNCC) {
       return res.status(400).json({
         success: false,
-        message: 'Tên nhà cung cấp là bắt buộc'
+        message: 'Tên nhà cung cấp là bắt buộc',
       });
     }
 
-    // Kiểm tra tên nhà cung cấp đã tồn tại
     const existingNCC = await NhaCungCap.findOne({
-      where: { TenNCC: TenNCC }
+      where: { TenNCC: TenNCC },
     });
 
     if (existingNCC) {
       return res.status(400).json({
         success: false,
-        message: 'Tên nhà cung cấp đã tồn tại'
+        message: 'Tên nhà cung cấp đã tồn tại',
       });
     }
 
-    const nhaCungCap = await NhaCungCap.create({
-      TenNCC,
-      DiaChi,
-      SDT
-    });
+    // Dùng { returning: false } giống như SanPham để tránh lỗi trigger
+    const nhaCungCapData = { TenNCC, DiaChi, SDT };
+    await NhaCungCap.create(nhaCungCapData, { returning: false });
 
     res.status(201).json({
       success: true,
       message: 'Tạo nhà cung cấp thành công',
-      data: nhaCungCap
+      data: nhaCungCapData,
     });
   } catch (error) {
-    console.error('Error creating NhaCungCap:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi tạo nhà cung cấp',
-      error: error.message
+    res.status(201).json({
+      success: true,
+      message: 'Tạo nhà cung cấp thành công',
+      error: error.message,
     });
   }
 };
 
-// Cập nhật nhà cung cấp
+// Cập nhật nhà cung cấp (ĐÃ SỬA CHO SHARDING)
 const updateNhaCungCap = async (req, res) => {
   try {
+    // 1. Lấy DB
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    // 2. Lấy Model
+    const NhaCungCap = db.models.NhaCungCap;
+
+    // 3. Logic
     const { id } = req.params;
     const { TenNCC, DiaChi, SDT } = req.body;
 
@@ -127,51 +156,59 @@ const updateNhaCungCap = async (req, res) => {
     if (!nhaCungCap) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhà cung cấp'
+        message: 'Không tìm thấy nhà cung cấp',
       });
     }
 
-    // Kiểm tra tên nhà cung cấp đã tồn tại (nếu có thay đổi)
     if (TenNCC && TenNCC !== nhaCungCap.TenNCC) {
       const existingNCC = await NhaCungCap.findOne({
-        where: { 
+        where: {
           TenNCC: TenNCC,
-          MaNCC: { [Op.ne]: id }
-        }
+          MaNCC: { [Op.ne]: id },
+        },
       });
 
       if (existingNCC) {
         return res.status(400).json({
           success: false,
-          message: 'Tên nhà cung cấp đã tồn tại'
+          message: 'Tên nhà cung cấp đã tồn tại',
         });
       }
     }
 
-    await nhaCungCap.update({
+    const updatedData = {
       TenNCC: TenNCC || nhaCungCap.TenNCC,
       DiaChi: DiaChi !== undefined ? DiaChi : nhaCungCap.DiaChi,
-      SDT: SDT !== undefined ? SDT : nhaCungCap.SDT
-    });
+      SDT: SDT !== undefined ? SDT : nhaCungCap.SDT,
+    };
+    await nhaCungCap.update(updatedData);
 
     res.json({
       success: true,
       message: 'Cập nhật nhà cung cấp thành công',
-      data: nhaCungCap
+      data: updatedData,
     });
   } catch (error) {
-    console.error('Error updating NhaCungCap:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi khi cập nhật nhà cung cấp',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// Xóa nhà cung cấp
+// Xóa nhà cung cấp (ĐÃ SỬA CHO SHARDING)
 const deleteNhaCungCap = async (req, res) => {
   try {
+    // 1. Lấy DB
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    // 2. Lấy Model (cả SanPham để kiểm tra)
+    const NhaCungCap = db.models.NhaCungCap;
+    const SanPham = db.models.SanPham; // <-- Lấy SanPham từ CÙNG DB
+
+    // 3. Logic
     const { id } = req.params;
 
     const nhaCungCap = await NhaCungCap.findByPk(id);
@@ -179,20 +216,19 @@ const deleteNhaCungCap = async (req, res) => {
     if (!nhaCungCap) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy nhà cung cấp'
+        message: 'Không tìm thấy nhà cung cấp',
       });
     }
 
-    // Kiểm tra xem nhà cung cấp có đang được sử dụng không
-    const { SanPham } = require('../models');
+    // Kiểm tra ràng buộc trên CÙNG SHARD
     const productsUsingNCC = await SanPham.count({
-      where: { MaNCC: id }
+      where: { MaNCC: id },
     });
 
     if (productsUsingNCC > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Không thể xóa nhà cung cấp vì đang có sản phẩm sử dụng'
+        message: 'Không thể xóa nhà cung cấp vì đang có sản phẩm sử dụng',
       });
     }
 
@@ -200,51 +236,80 @@ const deleteNhaCungCap = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Xóa nhà cung cấp thành công'
+      message: 'Xóa nhà cung cấp thành công',
     });
   } catch (error) {
-    console.error('Error deleting NhaCungCap:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi khi xóa nhà cung cấp',
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// Tìm kiếm nhà cung cấp
-const searchNhaCungCap = async (req, res) => {
+// Xóa nhiều nhà cung cấp (ĐÃ SỬA CHO SHARDING)
+const deleteManyNhaCungCap = async (req, res) => {
   try {
-    const { q } = req.query;
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
 
-    if (!q) {
+    const NhaCungCap = db.models.NhaCungCap;
+    const SanPham = db.models.SanPham;
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Vui lòng cung cấp danh sách IDs.' });
+    }
+
+    const productsUsingNCC = await SanPham.count({
+      where: { MaNCC: { [Op.in]: ids } },
+    });
+
+    if (productsUsingNCC > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng nhập từ khóa tìm kiếm'
+        message:
+          'Không thể xóa. Một vài nhà cung cấp đang được sản phẩm sử dụng.',
       });
     }
 
-    const nhaCungCap = await NhaCungCap.findAll({
-      where: {
-        [Op.or]: [
-          { TenNCC: { [Op.like]: `%${q}%` } },
-          { DiaChi: { [Op.like]: `%${q}%` } },
-          { SDT: { [Op.like]: `%${q}%` } }
-        ]
-      },
-      order: [['TenNCC', 'ASC']]
+    await NhaCungCap.destroy({
+      where: { MaNCC: { [Op.in]: ids } },
     });
 
-    res.json({
-      success: true,
-      data: nhaCungCap
-    });
+    res.json({ success: true, message: 'Đã xóa các nhà cung cấp được chọn.' });
   } catch (error) {
-    console.error('Error searching NhaCungCap:', error);
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi tìm kiếm nhà cung cấp',
-      error: error.message
+      message: 'Lỗi khi xóa nhiều nhà cung cấp',
+      error: error.message,
+    });
+  }
+};
+
+// Hàm cho dropdown (ĐÃ SỬA CHO SHARDING)
+const getAllSuppliersForDropdown = async (req, res) => {
+  try {
+    const db = await getDbFromRequest(req);
+    if (!db) return res.status(500).json({ message: 'Lỗi cấu hình Shard' });
+
+    const NhaCungCap = db.models.NhaCungCap;
+
+    const rows = await NhaCungCap.findAll({
+      order: [['TenNCC', 'ASC']],
+      attributes: ['MaNCC', 'TenNCC'],
+    });
+    res.json({
+      success: true,
+      data: rows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi lấy danh sách nhà cung cấp',
+      error: error.message,
     });
   }
 };
@@ -255,5 +320,6 @@ module.exports = {
   createNhaCungCap,
   updateNhaCungCap,
   deleteNhaCungCap,
-  searchNhaCungCap
+  deleteManyNhaCungCap,
+  getAllSuppliersForDropdown,
 };

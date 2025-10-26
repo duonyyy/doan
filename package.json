@@ -1,14 +1,26 @@
 {
   "name": "qlkh_backend",
   "version": "1.0.0",
+  "description": "Backend API cho hệ thống Quản Lý Kho Hàng với Database Sharding",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "demo": "nodemon index-demo.js",
+    "test": "node test-connections.js",
+    "lint": "echo 'No linter configured'",
+    "docs": "echo 'API Documentation available at /api/docs'"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "warehouse",
+    "inventory",
+    "management",
+    "api",
+    "sharding",
+    "sql-server"
+  ],
+  "author": "QLKH Team",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -23,5 +35,8 @@
     "sequelize": "^6.37.7",
     "sharp": "^0.33.5",
     "socket.io": "^4.8.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

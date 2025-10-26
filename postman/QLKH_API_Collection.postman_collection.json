@@ -1,13 +1,18 @@
 {
   "info": {
     "name": "QLKH API Collection",
-    "description": "Collection để test API Quản lý kho hàng",
+    "description": "Collection để test API Quản lý kho hàng với Authentication và Sharding",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
       "type": "string"
     }
   ],
@@ -37,13 +42,121 @@
       }
     },
     {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - Kho Hàng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('authToken', response.data.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"TenKho\": \"Kho Tổng TP. HCM\",\n  \"MatKhau\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get All Warehouses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/warehouses",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "warehouses"]
+            }
+          }
+        },
+        {
+          "name": "Test Master Database Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test-master",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test-master"]
+            }
+          }
+        },
+        {
+          "name": "Test Shard Database Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test-connection/Kho Tổng TP. HCM",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test-connection", "Kho Tổng TP. HCM"]
+            }
+          }
+        },
+        {
+          "name": "Test Shard Database Connection - Miền Bắc",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test-connection/Kho Tổng Hà Nội",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test-connection", "Kho Tổng Hà Nội"]
+            }
+          }
+        },
+        {
+          "name": "Test Shard Database Connection - Miền Trung",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test-connection/Kho Lạnh Đà Nẵng",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test-connection", "Kho Lạnh Đà Nẵng"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Nhà Cung Cấp",
       "item": [
         {
           "name": "Get All Nhà Cung Cấp",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/nhacungcap?page=1&limit=10&search=",
               "host": ["{{baseUrl}}"],

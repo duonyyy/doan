@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Import all route modules
+const authRoutes = require('./authRoutes');
 const nhaCungCapRoutes = require('./nhaCungCapRoutes');
 const khuVucRoutes = require('./khuVucRoutes');
 const khoHangRoutes = require('./khoHangRoutes');
@@ -14,6 +15,7 @@ const tonKhoRoutes = require('./tonKhoRoutes');
 const doanhThuRoutes = require('./doanhThuRoutes');
 
 // Mount all routes
+router.use('/auth', authRoutes);
 router.use('/nhacungcap', nhaCungCapRoutes);
 router.use('/khuvuc', khuVucRoutes);
 router.use('/khohang', khoHangRoutes);
@@ -40,6 +42,17 @@ router.get('/docs', (req, res) => {
     success: true,
     message: 'API Documentation',
     endpoints: {
+      auth: {
+        base: '/api/auth',
+        methods: ['POST', 'GET'],
+        description: 'Xác thực kho hàng',
+        routes: {
+          login: 'POST /api/auth/login - Đăng nhập với tên kho và mật khẩu',
+          warehouses: 'GET /api/auth/warehouses - Lấy danh sách tất cả kho',
+          testConnection: 'GET /api/auth/test-connection/:TenKho - Test kết nối cả master và shard database',
+          testMaster: 'GET /api/auth/test-master - Test kết nối Master Database'
+        }
+      },
       nhacungcap: {
         base: '/api/nhacungcap',
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
