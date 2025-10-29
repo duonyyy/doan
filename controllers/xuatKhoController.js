@@ -1,6 +1,6 @@
 const { XuatKho, ChiTietXuat, KhoHang, SanPham, TonKho } = require('../models');
 const { Op } = require('sequelize');
-const { getDbFromRequest } = require('../config/db.config'); // Giả định đường dẫn này đúng
+const { getDbFromRequest, masterDb } = require('../config/db.config'); // Giả định đường dẫn này đúng
 // GET /api/xuatkho - Lấy danh sách xuất kho
 const getAllXuatKho = async (req, res) => {
   try {
@@ -127,7 +127,7 @@ const getXuatKhoById = async (req, res) => {
 const createXuatKho = async (req, res) => {
   // 1. ĐỊNH TUYẾN: Lấy kết nối DB (Master/Shard)
   // Việc định tuyến này phụ thuộc vào ShardKey hoặc MaKhuVuc có trong req.body
-  const db = await getDbFromRequest(req);
+  const db = masterDb;
   if (!db) {
     return res.status(500).json({
       success: false,

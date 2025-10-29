@@ -2,7 +2,7 @@
 const { getDbFromRequest } = require('../config/db.config');
 const { Op } = require('sequelize');
 
-// BỎ HOÀN TOÀN: const { NhaCungCap } = require('../models');
+ const { NhaCungCap } = require('../models');
 
 // Lấy tất cả nhà cung cấp (ĐÃ SỬA CHO SHARDING)
 const getAllNhaCungCap = async (req, res) => {
